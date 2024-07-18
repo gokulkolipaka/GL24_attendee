@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,44 +13,38 @@
             padding: 20px;
         }
         #searchContainer {
-            position: relative;
             margin-bottom: 20px;
         }
         #searchInput {
-            width: 100%;
+            width: 70%;
             padding: 10px;
             font-size: 16px;
         }
         #clearSearch {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
+            padding: 10px;
+            font-size: 16px;
             cursor: pointer;
-            display: none;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        #attendeeList {
+            list-style-type: none;
+            padding: 0;
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+        .attendee {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
         }
-        th {
-            background-color: #f2f2f2;
-        }
-        .check-in-btn {
+        .attendee button {
             padding: 10px;
             font-size: 16px;
             cursor: pointer;
         }
         .checked-in {
-            background-color: #4CAF50;
-            color: white;
+            background-color: #90EE90;
         }
-        #downloadBtn {
+        #downloadButton {
             margin-top: 20px;
             padding: 10px;
             font-size: 16px;
@@ -61,25 +56,15 @@
     <h1>Event Check-in App</h1>
     <div id="searchContainer">
         <input type="text" id="searchInput" placeholder="Search by name...">
-        <span id="clearSearch">&times;</span>
+        <button id="clearSearch">✕</button>
     </div>
-    <table id="attendeeTable">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Mobile</th>
-                <th>PMI ID</th>
-                <th>Check-in</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-    <button id="downloadBtn">Download Check-in Data</button>
+    <ul id="attendeeList"></ul>
+    <button id="downloadButton">Download Check-in Data</button>
 
     <script>
         const attendees = [
-            {name: "Aiswarya Surapaneni", email: "Aishu.opal@gmail.com", mobile: "+918897314372", checkedIn: false},
+            // {name: "Aditya Rajendra Kaware", email: "aditya.kaware@gmail.com", mobile: "+919860566041", checkedIn: false},
+{name: "Aiswarya Surapaneni", email: "Aishu.opal@gmail.com", mobile: "+918897314372", checkedIn: false},
 {name: "Ajay Kumar Juluru", email: "ajayjuluru@gmail.com", mobile: "+919574973459", checkedIn: false},
 {name: "Ajitabh Singh", email: "ajitabhsingh@neulandlabs.com", mobile: "+916367274302", checkedIn: false},
 {name: "Akash Tiwari", email: "aakashtiwari07@gmail.com", mobile: "+918826435700", checkedIn: false},
@@ -389,90 +374,65 @@
 {name: "Zakkam anil kumar", email: "anilzakkam@gmail.com", mobile: "+919959349818", checkedIn: false}
         ];
 
-        attendees.sort((a, b) => a.name.localeCompare(b.name));
+        const attendeeList = document.getElementById('attendeeList');
+        const searchInput = document.getElementById('searchInput');
+        const clearSearch = document.getElementById('clearSearch');
+        const downloadButton = document.getElementById('downloadButton');
 
-        const tableBody = document.querySelector("#attendeeTable tbody");
-        const searchInput = document.getElementById("searchInput");
-        const clearSearch = document.getElementById("clearSearch");
-        const downloadBtn = document.getElementById("downloadBtn");
-
-        function renderTable(filteredAttendees = attendees) {
-            tableBody.innerHTML = "";
+        function renderAttendees(filteredAttendees = attendees) {
+            attendeeList.innerHTML = '';
             filteredAttendees.forEach((attendee, index) => {
-                const row = tableBody.insertRow();
-                row.insertCell(0).textContent = attendee.name;
-                row.insertCell(1).textContent = attendee.email;
-                row.insertCell(2).textContent = attendee.mobile;
-                
-                const pmiCell = row.insertCell(3);
-                const pmiInput = document.createElement("input");
-                pmiInput.type = "text";
-                pmiInput.placeholder = "Enter PMI ID";
-                pmiInput.value = attendee.pmiId || "";
-                pmiInput.addEventListener("input", (e) => {
-                    attendee.pmiId = e.target.value;
-                });
-                pmiCell.appendChild(pmiInput);
-
-                const checkInCell = row.insertCell(4);
-                const checkInBtn = document.createElement("button");
-                checkInBtn.textContent = attendee.checkedIn ? "Undo Check-in" : "Check-in";
-                checkInBtn.className = `check-in-btn ${attendee.checkedIn ? "checked-in" : ""}`;
-                checkInBtn.addEventListener("click", () => {
-                    attendee.checkedIn = !attendee.checkedIn;
-                    checkInBtn.textContent = attendee.checkedIn ? "Undo Check-in" : "Check-in";
-                    checkInBtn.classList.toggle("checked-in");
-                });
-                checkInCell.appendChild(checkInBtn);
+                const li = document.createElement('li');
+                li.className = 'attendee' + (attendee.checkedIn ? ' checked-in' : '');
+                li.innerHTML = `
+                    <span>${attendee.name}</span>
+                    <div>
+                        <input type="text" placeholder="PMI ID" class="pmi-id">
+                        <button onclick="toggleCheckIn(${index})">${attendee.checkedIn ? 'Undo' : 'Check In'}</button>
+                    </div>
+                `;
+                attendeeList.appendChild(li);
             });
+        }
+
+        function toggleCheckIn(index) {
+            attendees[index].checkedIn = !attendees[index].checkedIn;
+            const pmiId = document.querySelectorAll('.pmi-id')[index].value;
+            attendees[index].pmiId = pmiId;
+            renderAttendees();
         }
 
         function filterAttendees() {
             const searchTerm = searchInput.value.toLowerCase();
-            const filteredAttendees = attendees.filter(attendee => 
+            const filtered = attendees.filter(attendee => 
                 attendee.name.toLowerCase().includes(searchTerm)
             );
-            renderTable(filteredAttendees);
+            renderAttendees(filtered);
         }
 
-        searchInput.addEventListener("input", () => {
-            filterAttendees();
-            clearSearch.style.display = searchInput.value ? "inline" : "none";
+        searchInput.addEventListener('input', filterAttendees);
+
+        clearSearch.addEventListener('click', () => {
+            searchInput.value = '';
+            renderAttendees();
         });
 
-        clearSearch.addEventListener("click", () => {
-            searchInput.value = "";
-            filterAttendees();
-            clearSearch.style.display = "none";
-        });
-
-        downloadBtn.addEventListener("click", () => {
-            const checkedInAttendees = attendees.filter(attendee => attendee.checkedIn);
-            const csv = [
-                ["Name", "Email", "Mobile", "PMI ID"],
-                ...checkedInAttendees.map(attendee => [
-                    attendee.name,
-                    attendee.email,
-                    attendee.mobile,
-                    attendee.pmiId || ""
-                ])
-            ].map(row => row.join(",")).join("\n");
-
-            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        downloadButton.addEventListener('click', () => {
+            const checkedInData = attendees
+                .filter(attendee => attendee.checkedIn)
+                .map(attendee => `${attendee.name},${attendee.email},${attendee.mobile},${attendee.pmiId || ''}`)
+                .join('\n');
+            const csvContent = "data:text/csv;charset=utf-8,Name,Email,Mobile,PMI ID\n" + checkedInData;
+            const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
-            if (navigator.msSaveBlob) {
-                navigator.msSaveBlob(blob, "checked_in_attendees.csv");
-            } else {
-                link.href = URL.createObjectURL(blob);
-                link.style.display = "none";
-                link.download = "checked_in_attendees.csv";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "checked_in_attendees.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         });
 
-        renderTable();
+        renderAttendees();
     </script>
 </body>
 </html>
